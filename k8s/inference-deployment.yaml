@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inference-server
+  namespace: default
+  labels:
+    app: inference-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: inference-server
+  template:
+    metadata:
+      labels:
+        app: inference-server
+    spec:
+      containers:
+      - name: inference-server
+        image: inference-server:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: INITIAL_MODEL_REPO_ID
+          valueFrom:
+            configMapKeyRef:
+              name: inference-config
+              key: INITIAL_MODEL_REPO_ID
+        - name: HF_HOME
+          valueFrom:
+            configMapKeyRef:
+              name: inference-config
+              key: HF_HOME
+        - name: TRANSFORMERS_CACHE
+          valueFrom:
+            configMapKeyRef:
+              name: inference-config
+              key: TRANSFORMERS_CACHE
+        - name: SYNC_STATE_FILE
+          value: "/models/sync_state.json"
+        volumeMounts:
+        - name: model-storage
+          mountPath: /models
+        resources:
+          requests:
+            memory: "8Gi"
+            cpu: "2"
+            nvidia.com/gpu: 1
+          limits:
+            memory: "16Gi"
+            cpu: "4"
+            nvidia.com/gpu: 1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: model-storage
+        persistentVolumeClaim:
+          claimName: model-storage

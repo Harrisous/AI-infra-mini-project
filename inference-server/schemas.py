@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 class GenerateRequest(BaseModel):
     prompt: str = Field(..., min_length=1)
+    system_prompt: str | None = Field(None, description="Optional system prompt/instruction")
     max_new_tokens: int = Field(128, ge=1, le=2048)
     temperature: float = Field(0.7, ge=0.0, le=2.0)
 

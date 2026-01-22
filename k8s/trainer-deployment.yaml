@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trainer-server
+  namespace: default
+  labels:
+    app: trainer-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trainer-server
+  template:
+    metadata:
+      labels:
+        app: trainer-server
+    spec:
+      containers:
+      - name: trainer-server
+        image: trainer-server:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: INITIAL_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: trainer-config
+              key: INITIAL_MODEL
+        - name: SUBSTITUTE_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: trainer-config
+              key: SUBSTITUTE_MODEL
+        - name: INFERENCE_URLS
+          valueFrom:
+            configMapKeyRef:
+              name: trainer-config
+              key: INFERENCE_URLS
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "0.5"
+          limits:
+            memory: "1Gi"
+            cpu: "1"

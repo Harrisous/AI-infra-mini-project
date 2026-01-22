@@ -1,0 +1,19 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+jinja2==3.1.6
+httpx==0.28.1
+requests==2.32.3
+tenacity==9.0.0
+
+# Model loading (repo-id based)
+transformers==4.48.3
+huggingface_hub==0.27.1
+safetensors==0.5.2
+accelerate==1.3.0
+
+# Torch: leave unpinned; install per your CUDA/driver. See docs/SETUP.md
+# torch
+
+# K8s client used by trainer in deploy stage
+kubernetes==31.0.0

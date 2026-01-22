@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Infra Mini Project - Control Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .status-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .status-item.ready {
+            border-left-color: #28a745;
+        }
+        
+        .status-item.loading {
+            border-left-color: #ffc107;
+        }
+        
+        .status-item.error {
+            border-left-color: #dc3545;
+        }
+        
+        .status-item h3 {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .status-item .value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .response-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .response-box.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .response-box.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Infra Mini Project</h1>
+            <p>Inference Server Control Panel</p>
+        </div>
+        
+        <!-- Status Card -->
+        <div class="card">
+            <h2>Server Status</h2>
+            <button class="btn" onclick="refreshStatus()">🔄 Refresh Status</button>
+            <div id="status-container" class="status-grid"></div>
+        </div>
+        
+        <!-- Generate Card -->
+        <div class="card">
+            <h2>Generate Text</h2>
+            <form id="generate-form" onsubmit="generateText(event)">
+                <div class="form-group">
+                    <label for="system-prompt">System Prompt (Optional):</label>
+                    <textarea id="system-prompt" placeholder="Enter system prompt/instruction (optional)..." rows="3"></textarea>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        Optional: Provide system-level instructions or context for the model
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label for="prompt">User Prompt:</label>
+                    <textarea id="prompt" placeholder="Enter your prompt here..." required>What is machine learning?</textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="max-tokens">Max Tokens:</label>
+                        <input type="number" id="max-tokens" value="50" min="1" max="500">
+                    </div>
+                    <div class="form-group">
+                        <label for="temperature">Temperature:</label>
+                        <input type="number" id="temperature" value="0.7" min="0" max="2" step="0.1">
+                    </div>
+                </div>
+                <button type="submit" class="btn" id="generate-btn">Generate</button>
+            </form>
+            <div id="generate-response"></div>
+        </div>
+        
+        <!-- Update Model Card -->
+        <div class="card">
+            <h2>Update Model</h2>
+            <form id="update-form" onsubmit="updateModel(event)">
+                <div class="form-group">
+                    <label for="model-repo-id">HuggingFace Model Repo ID:</label>
+                    <input type="text" id="model-repo-id" placeholder="e.g., Qwen/Qwen2.5-7B-Instruct" required>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        Enter a HuggingFace model repository ID to hot-reload the model
+                    </small>
+                </div>
+                <button type="submit" class="btn btn-danger" id="update-btn">Update Model</button>
+            </form>
+            <div id="update-response"></div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '';
+        
+        async function refreshStatus() {
+            const container = document.getElementById('status-container');
+            container.innerHTML = '<div class="loading"></div> Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/inference/status`);
+                const data = await response.json();
+                
+                let html = '';
+                data.replicas.forEach(replica => {
+                    if (replica.success) {
+                        const status = replica.status;
+                        const isReady = status.model_repo_id && status.model_repo_id !== 'unknown';
+                        const statusClass = isReady ? 'ready' : (status.updating ? 'loading' : 'error');
+                        
+                        html += `
+                            <div class="status-item ${statusClass}">
+                                <h3>${replica.url}</h3>
+                                <div class="value">${status.model_repo_id || 'Loading...'}</div>
+                                <div style="font-size: 0.85em; color: #666; margin-top: 5px;">
+                                    Version: ${status.model_version} | 
+                                    ${status.updating ? 'Updating...' : 'Ready'}
+                                </div>
+                                ${status.last_update_error ? `<div style="color: #dc3545; font-size: 0.85em; margin-top: 5px;">Error: ${status.last_update_error}</div>` : ''}
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="status-item error">
+                                <h3>${replica.url}</h3>
+                                <div class="value">Error</div>
+                                <div style="color: #dc3545; font-size: 0.85em; margin-top: 5px;">${replica.error}</div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<div class="alert alert-warning">Error loading status: ${error.message}</div>`;
+            }
+        }
+        
+        async function generateText(event) {
+            event.preventDefault();
+            const btn = document.getElementById('generate-btn');
+            const responseDiv = document.getElementById('generate-response');
+            
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            responseDiv.innerHTML = '<div class="loading"></div> Generating...';
+            
+            try {
+                const prompt = document.getElementById('prompt').value;
+                const systemPrompt = document.getElementById('system-prompt').value.trim();
+                const maxTokens = parseInt(document.getElementById('max-tokens').value);
+                const temperature = parseFloat(document.getElementById('temperature').value);
+                
+                // Build query string
+                let queryParams = `prompt=${encodeURIComponent(prompt)}&max_tokens=${maxTokens}&temperature=${temperature}`;
+                if (systemPrompt) {
+                    queryParams += `&system_prompt=${encodeURIComponent(systemPrompt)}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/api/inference/generate?${queryParams}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let modelInfo = '';
+                    if (data.model_repo_id && data.model_repo_id !== 'unknown') {
+                        modelInfo = `<strong>Model:</strong> ${data.model_repo_id}`;
+                        if (data.model_version && data.model_version !== 'unknown') {
+                            modelInfo += ` (v${data.model_version})`;
+                        }
+                        modelInfo += '<br>';
+                    }
+                    
+                    responseDiv.innerHTML = `
+                        <div class="response-box success">
+                            ${modelInfo}
+                            <strong>Response:</strong><br>
+                            ${data.text}
+                        </div>
+                    `;
+                } else {
+                    responseDiv.innerHTML = `<div class="response-box error">Error: ${data.error || 'Unknown error'}</div>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="response-box error">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Generate';
+            }
+        }
+        
+        async function updateModel(event) {
+            event.preventDefault();
+            const btn = document.getElementById('update-btn');
+            const responseDiv = document.getElementById('update-response');
+            const modelRepoId = document.getElementById('model-repo-id').value;
+            
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+            responseDiv.innerHTML = '<div class="alert alert-info">Requesting model update on all replicas...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/inference/update-model?model_repo_id=${encodeURIComponent(modelRepoId)}`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    responseDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            ✓ Model update requested successfully on all replicas<br>
+                            Model: ${data.model_repo_id}<br>
+                            <small>Note: Model loading happens asynchronously. Check status to monitor progress.</small>
+                        </div>
+                    `;
+                    // Refresh status after a moment
+                    setTimeout(refreshStatus, 2000);
+                } else {
+                    let errorMsg = 'Update failed on some replicas:<br>';
+                    data.replica_results.forEach(result => {
+                        if (!result.success) {
+                            errorMsg += `• ${result.url}: ${result.error || 'Unknown error'}<br>`;
+                        }
+                    });
+                    responseDiv.innerHTML = `<div class="alert alert-warning">${errorMsg}</div>`;
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="alert alert-warning">Error: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Update Model';
+            }
+        }
+        
+        // Auto-refresh status every 5 seconds
+        setInterval(refreshStatus, 5000);
+        
+        // Load initial status
+        refreshStatus();
+    </script>
+</body>
+</html>

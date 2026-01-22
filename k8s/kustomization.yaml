@@ -1,0 +1,21 @@
+# Kustomization file for easier deployment management
+# Usage: kubectl apply -k k8s/
+
+resources:
+  - storage.yaml
+  - config.yaml
+  - inference-service.yaml
+  - inference-headless-service.yaml
+  - inference-deployment.yaml
+  - trainer-service.yaml
+  - trainer-deployment.yaml
+  - ui-deployment.yaml
+  - ui-service.yaml
+
+# Common labels
+commonLabels:
+  project: ai-infra-mini
+  version: v1.0.0
+
+# Namespace (uncomment to deploy to specific namespace)
+# namespace: ai-infra
