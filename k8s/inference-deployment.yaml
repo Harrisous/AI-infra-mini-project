@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: inference-server
-        image: inference-server:latest
+        image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/ai-infra-inference:latest
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8000

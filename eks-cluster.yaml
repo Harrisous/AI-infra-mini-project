@@ -1,0 +1,25 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: ai-infra-cluster
+  region: us-east-1
+  version: "1.29"
+
+iam:
+  withOIDC: true
+
+managedNodeGroups:
+  - name: cpu-nodes
+    instanceType: t3.large
+    desiredCapacity: 2
+    minSize: 1
+    maxSize: 3
+
+  - name: gpu-nodes
+    instanceType: g4dn.xlarge      # 1 x NVIDIA T4
+    desiredCapacity: 1
+    minSize: 1
+    maxSize: 2
+    labels:
+      role: gpu
